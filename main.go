@@ -6,46 +6,32 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"sort"
 )
 
-type Result struct {
-	Success   bool
-	Timestamp int
-	Base      string
-	Date      string
-	Rates     map[string]float64
-}
-type Error struct {
-	Success bool
-	Error   struct {
-		Code int
-		Type string
-		Info string
-	}
-}
+var apis map[int]string
 
-func main() {
-	url := "http://data.fixer.io/api/latest?access_key=21ce410f9900f7c07838c2e6d1f80e31"
+func getDataResponse(API int) {
+	url := apis[API]
 	if resp, err := http.Get(url); err == nil {
 		defer resp.Body.Close()
 		if body, err := ioutil.ReadAll(resp.Body); err == nil {
-			var result Result
+			var result map[string]interface{}
 			json.Unmarshal([]byte(body), &result)
-			if result.Success {
-				keys := make([]string, 0, len(result.Rates))
-				// get all the keys from
-				for k := range result.Rates {
-					keys = append(keys, k)
+			switch API {
+
+			case 1:
+				if result["success"] == true {
+					fmt.Println(result["rates"].(map[string]interface{})["USD"])
+				} else {
+					fmt.Println(result["error"].(map[string]interface{})["info"])
 				}
-				sort.Strings(keys)
-				for _, k := range keys {
-					fmt.Println(k, result.Rates[k])
+			case 2: // for the openweathermap.org API
+				if result["main"] != nil {
+					fmt.Println(result["main"].(map[string]interface{})["temp"])
+				} else {
+					fmt.Println(result["message"])
 				}
-			} else {
-				var err Error
-				json.Unmarshal([]byte(body), &err)
-				fmt.Println(err.Error.Info)
+
 			}
 		} else {
 			log.Fatal(err)
@@ -54,4 +40,14 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println("Done")
+}
+
+func main() {
+	apis = make(map[int]string)
+	apis[1] = "http://data.fixer.io/api/latest?access_key=21ce410f9900f7c07838c2e6d1f80e31"
+	apis[2] = "http://api.openweathermap.org/data/2.5/weather?q=London&appid=61b3761a8c87df93dff55c1ca9eb93a4"
+
+	getDataResponse(1)
+	getDataResponse(2)
+
 }
