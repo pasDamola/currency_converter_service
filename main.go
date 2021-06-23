@@ -39,7 +39,6 @@ func getDataResponse(API int) {
 	} else {
 		log.Fatal(err)
 	}
-	fmt.Println("Done")
 }
 
 func main() {
@@ -47,7 +46,8 @@ func main() {
 	apis[1] = "http://data.fixer.io/api/latest?access_key=21ce410f9900f7c07838c2e6d1f80e31"
 	apis[2] = "http://api.openweathermap.org/data/2.5/weather?q=London&appid=61b3761a8c87df93dff55c1ca9eb93a4"
 
-	getDataResponse(1)
-	getDataResponse(2)
+	go getDataResponse(1)
+	go getDataResponse(2)
 
+	fmt.Scanln()
 }
